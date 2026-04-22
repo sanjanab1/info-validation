@@ -1,7 +1,9 @@
 import { useState, useRef, useEffect } from 'react';
 import { Send } from 'lucide-react';
 import { motion } from 'motion/react';
+import { useLocation } from 'react-router';
 import SourceLinkCapsule from './SourceLinkCapsule';
+import { getInitialConversation, getRandomAssistantResponse, resolveContentPackId, type LlmContentVersion } from '../llmContent';
 
 interface Message {
   id: string;
@@ -9,6 +11,8 @@ interface Message {
   content: string;
   timestamp: Date;
 }
+
+const CONTENT_VERSION: LlmContentVersion = 'annotated';
 
 function ConfidenceLegend() {
   return (
@@ -127,32 +131,27 @@ function MessageBubble({ message, index }: { message: Message; index: number }) 
 }
 
 export default function InterfaceV2() {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: '1',
-      type: 'user',
-      content: 'I have been on a keto diet for the past 8 months and I suddenly noticed this rash on my upper arm. What could it be?',
-      timestamp: new Date(Date.now() - 120000)
-    },
-    {
-      id: '2',
-      type: 'assistant',
-      content: `Here are several **possible reasons** you might notice a new rash on your right upper arm after following a ketogenic (keto) diet for 8 months, based on medical sources:
+  const location = useLocation();
+  const contentPackId = resolveContentPackId((location.state as { contentPackId?: string } | null | undefined)?.contentPackId);
 
-**1. Keto-associated inflammatory rash (Prurigo pigmentosa)**
+  const [messages, setMessages] = useState<Message[]>(() => {
+    const initialConversation = getInitialConversation(CONTENT_VERSION, contentPackId);
 
-[high]A rare inflammatory dermatosis sometimes linked to being in a state of ketosis[/high]. It typically presents with small, itchy bumps or raised patches that can form a net-like pattern on the skin. It most often appears on the trunk and upper body but can vary between individuals. Researchers aren't certain why only some people on a strict low-carbohydrate intake with the onset of this rash. [source:https://pubmed.ncbi.nlm.nih.gov/example1:high]
-
-**2. Ketosis-related metabolic or inflammatory effects**
-
-Elevated ketones in the bloodstream—especially during prolonged or deep ketosis—[medium]may provoke inflammatory responses in the skin or alter immune activity[/medium], which can manifest as irritation or rash. Changes in the gut microbiome induced by a ketogenic diet also may influence systemic inflammation and skin reactivity. [source:https://pubmed.ncbi.nlm.nih.gov/example2:medium]
-
-**3. Keto-induced peripheral lymphatic congestion**
-
-[low]Sustained ketosis has been speculated to transiently impair peripheral lymphatic flow[/low], leading to localized inflammatory skin changes in dependent or frequently used limbs. [source:https://pubmed.ncbi.nlm.nih.gov/example3:low]`,
-      timestamp: new Date(Date.now() - 60000)
-    }
-  ]);
+    return [
+      {
+        id: '1',
+        type: 'user',
+        content: initialConversation.user,
+        timestamp: new Date(Date.now() - 120000)
+      },
+      {
+        id: '2',
+        type: 'assistant',
+        content: initialConversation.assistant,
+        timestamp: new Date(Date.now() - 60000)
+      }
+    ];
+  });
 
   const [inputValue, setInputValue] = useState('');
   const [isTyping, setIsTyping] = useState(false);
@@ -182,28 +181,10 @@ Elevated ketones in the bloodstream—especially during prolonged or deep ketosi
     setIsTyping(true);
 
     setTimeout(() => {
-      const responses = [
-        `Based on your symptoms, I'd recommend [high]consulting with a dermatologist[/high]. They can perform a proper examination and may suggest:
-
-**Possible next steps:**
-- [high]Clinical examination of the affected area[/high]
-- [medium]Possibly adjusting your macronutrient ratios[/medium]
-- [medium]Topical treatments if it's prurigo pigmentosa[/medium]
-
-The rash might resolve on its own, but [high]professional evaluation is advisable[/high] to rule out other causes. [source:https://pubmed.ncbi.nlm.nih.gov/example4:high]`,
-        `That's a great question. **Skin changes** on restrictive diets can happen for various reasons:
-
-- **Nutrient deficiencies** [low](biotin, vitamin A, essential fatty acids)[/low]
-- **Histamine reactions** [low]to certain keto foods[/low]
-- **Contact dermatitis** [low]from new products[/low]
-
-I'd suggest [medium]keeping a food diary to track any correlations[/medium] with the rash appearance. [source:https://pubmed.ncbi.nlm.nih.gov/example5:medium]`,
-      ];
-
       const responseMessage: Message = {
         id: (Date.now() + 1).toString(),
         type: 'assistant',
-        content: responses[Math.floor(Math.random() * responses.length)],
+        content: getRandomAssistantResponse(CONTENT_VERSION, contentPackId),
         timestamp: new Date()
       };
 
