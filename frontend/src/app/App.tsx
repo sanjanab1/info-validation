@@ -1,6 +1,15 @@
 import { useState, useRef, useEffect } from 'react';
 import { Send } from 'lucide-react';
 import { motion } from 'motion/react';
+import Clarity from '@microsoft/clarity';
+
+// Clarity integration
+const projectId = "wgxxulwpao"
+Clarity.init(projectId)
+
+Clarity.identify("custom-id", "custom-session-id", "custom-page-id", "friendly-name"); // only custom-id is required
+// custom-id - unique ID per customer 
+// custom-session-id - unique ID for session
 
 interface Message {
   id: string;
