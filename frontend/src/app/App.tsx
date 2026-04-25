@@ -3,14 +3,6 @@ import { Send } from 'lucide-react';
 import { motion } from 'motion/react';
 import Clarity from '@microsoft/clarity';
 
-// Clarity integration
-const projectId = "wgxxulwpao"
-Clarity.init(projectId)
-
-Clarity.identify("custom-id", "custom-session-id", "custom-page-id", "friendly-name"); // only custom-id is required
-// custom-id - unique ID per customer 
-// custom-session-id - unique ID for session
-
 interface Message {
   id: string;
   type: 'user' | 'assistant';
@@ -137,6 +129,13 @@ function MessageBubble({ message, index }: { message: Message; index: number }) 
 }
 
 export default function App() {
+  useEffect(() => {
+    const projectId = import.meta.env.VITE_CLARITY_PROJECT_ID;
+    if (!projectId) return;
+
+    Clarity.init(projectId);
+  }, []);
+
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
