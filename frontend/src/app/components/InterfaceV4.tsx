@@ -5,6 +5,8 @@ import { useLocation } from 'react-router';
 import { getFollowUpPrompt } from '../interfaceConfig';
 import SourceLinkCapsule from './SourceLinkCapsule';
 import { getInitialConversation, getRandomAssistantResponse, resolveContentPackId, type LlmContentVersion } from '../llmContent';
+import { useAnalytics } from '../hooks/useAnalytics';
+import type { TrackFn } from '../analytics/types';
 
 interface Message {
   id: string;
@@ -15,7 +17,7 @@ interface Message {
 
 const CONTENT_VERSION: LlmContentVersion = 'plain';
 
-function MessageBubble({ message, index }: { message: Message; index: number }) {
+function MessageBubble({ message, index, onTrack }: { message: Message; index: number; onTrack?: TrackFn }) {
   const isUser = message.type === 'user';
 
   const SOURCE_CARD_SUMMARIES: Record<string, string> = {
@@ -74,6 +76,7 @@ function MessageBubble({ message, index }: { message: Message; index: number }) 
               showUrl
               imageUrl={imageUrl}
               summary={summary}
+              onTrack={onTrack}
             />
           );
         }
@@ -125,6 +128,7 @@ export default function InterfaceV4() {
   const pid = 4;
   const location = useLocation();
   const contentPackId = resolveContentPackId((location.state as { contentPackId?: string } | null | undefined)?.contentPackId);
+  const { track } = useAnalytics(pid, 'v4', contentPackId);
   const [messages, setMessages] = useState<Message[]>(() => {
     const initialConversation = getInitialConversation(CONTENT_VERSION, contentPackId);
 
@@ -159,6 +163,8 @@ export default function InterfaceV4() {
 
   const handleSend = async () => {
     if (!inputValue.trim()) return;
+
+    track('click', 'send_message');
 
     const newMessage: Message = {
       id: Date.now().toString(),
@@ -202,7 +208,7 @@ export default function InterfaceV4() {
       <div className="flex-1 overflow-y-auto px-6 py-6">
         <div className="max-w-3xl mx-auto">
           {messages.map((message, index) => (
-            <MessageBubble key={message.id} message={message} index={index} />
+            <MessageBubble key={message.id} message={message} index={index} onTrack={track} />
           ))}
 
           {isTyping && (

@@ -5,6 +5,8 @@ import { useLocation } from 'react-router';
 import { getFollowUpPrompt, getFollowUpOptions } from '../interfaceConfig';
 import SourceLinkCapsule from './SourceLinkCapsule';
 import { getInitialConversation, getRandomAssistantResponse, resolveContentPackId, type LlmContentVersion } from '../llmContent';
+import { useAnalytics } from '../hooks/useAnalytics';
+import type { TrackFn } from '../analytics/types';
 
 interface Message {
   id: string;
@@ -15,7 +17,7 @@ interface Message {
 
 const CONTENT_VERSION: LlmContentVersion = 'plain';
 
-function MessageBubble({ message, index }: { message: Message; index: number }) {
+function MessageBubble({ message, index, onTrack }: { message: Message; index: number; onTrack?: TrackFn }) {
   const isUser = message.type === 'user';
 
   const SOURCE_CARD_SUMMARIES: Record<string, string> = {
@@ -72,6 +74,7 @@ function MessageBubble({ message, index }: { message: Message; index: number }) 
               hoverVariant="text"
               title="Clinical Insight Preview"
               showUrl
+              onTrack={onTrack}
             />
           );
         }
@@ -105,7 +108,7 @@ function MessageBubble({ message, index }: { message: Message; index: number }) 
   );
 }
 
-function FollowUpPromptBox({ pid, onOptionClick }: { pid: number; onOptionClick?: (option: string) => void }) {
+function FollowUpPromptBox({ pid, onOptionClick, onTrack }: { pid: number; onOptionClick?: (option: string) => void; onTrack?: TrackFn }) {
   const followUpPrompt = getFollowUpPrompt(pid);
   const options = getFollowUpOptions(pid);
 
@@ -123,7 +126,7 @@ function FollowUpPromptBox({ pid, onOptionClick }: { pid: number; onOptionClick?
           {options.map((option, idx) => (
             <button
               key={idx}
-              onClick={() => onOptionClick?.(option)}
+              onClick={() => { onTrack?.('click', 'follow_up_option', { optionText: option }); onOptionClick?.(option); }}
               className="inline-flex items-center rounded-full border border-gray-300 bg-white px-4 py-2 text-xs font-medium text-gray-700 hover:bg-gray-50 hover:border-gray-400 transition-colors cursor-pointer"
             >
               {option}
@@ -139,6 +142,7 @@ export default function InterfaceV5() {
   const pid = 5;
   const location = useLocation();
   const contentPackId = resolveContentPackId((location.state as { contentPackId?: string } | null | undefined)?.contentPackId);
+  const { track } = useAnalytics(pid, 'v5', contentPackId);
   const [messages, setMessages] = useState<Message[]>(() => {
     const initialConversation = getInitialConversation(CONTENT_VERSION, contentPackId);
 
@@ -173,6 +177,8 @@ export default function InterfaceV5() {
 
   const handleSend = async () => {
     if (!inputValue.trim()) return;
+
+    track('click', 'send_message');
 
     const newMessage: Message = {
       id: Date.now().toString(),
@@ -226,10 +232,10 @@ export default function InterfaceV5() {
       <div className="flex-1 overflow-y-auto px-6 py-6">
         <div className="max-w-3xl mx-auto">
           {messages.map((message, index) => (
-            <MessageBubble key={message.id} message={message} index={index} />
+            <MessageBubble key={message.id} message={message} index={index} onTrack={track} />
           ))}
 
-          {messages.length > 1 && !isTyping && <FollowUpPromptBox pid={pid} onOptionClick={handleOptionClick} />}
+          {messages.length > 1 && !isTyping && <FollowUpPromptBox pid={pid} onOptionClick={handleOptionClick} onTrack={track} />}
 
           {isTyping && (
             <motion.div

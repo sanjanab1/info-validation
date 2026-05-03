@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from './ui/popover';
+import type { TrackFn } from '../analytics/types';
 
 type Confidence = 'low' | 'medium' | 'high';
 type CapsuleTone = 'confidence' | 'gray';
@@ -19,6 +20,7 @@ interface SourceLinkCapsuleProps {
   showUrl?: boolean;
   imageUrl?: string;
   summary?: string;
+  onTrack?: TrackFn;
 }
 
 export default function SourceLinkCapsule({
@@ -31,8 +33,10 @@ export default function SourceLinkCapsule({
   showUrl = true,
   imageUrl,
   summary,
+  onTrack,
 }: SourceLinkCapsuleProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const hoverStartRef = useRef<number>(0);
 
   const confidenceColors = {
     low: 'text-[#A61E57] border-[#EA4C89]/40 bg-[#EA4C89]/15 hover:bg-[#EA4C89]/25',
@@ -52,8 +56,16 @@ export default function SourceLinkCapsule({
           target="_blank"
           rel="noopener noreferrer"
           className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium align-middle transition-colors cursor-pointer ${capsuleClass}`}
-          onMouseEnter={() => setIsOpen(true)}
-          onMouseLeave={() => setIsOpen(false)}
+          onClick={() => onTrack?.('click', 'source_capsule', { url, confidence })}
+          onMouseEnter={() => {
+            setIsOpen(true);
+            hoverStartRef.current = Date.now();
+            onTrack?.('hover_enter', 'source_capsule', { url, confidence });
+          }}
+          onMouseLeave={() => {
+            setIsOpen(false);
+            onTrack?.('hover_exit', 'source_capsule', { url, confidence, durationMs: Date.now() - hoverStartRef.current });
+          }}
         >
           {label}
         </a>

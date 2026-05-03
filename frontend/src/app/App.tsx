@@ -6,6 +6,7 @@ import InterfaceV3 from './components/InterfaceV3';
 import InterfaceV4 from './components/InterfaceV4';
 import InterfaceV5 from './components/InterfaceV5';
 import InterfaceV6 from './components/InterfaceV6';
+import AnalyticsViewer from './components/AnalyticsViewer';
 
 export default function App() {
   return (
@@ -18,6 +19,7 @@ export default function App() {
         <Route path="/v4" element={<InterfaceV4 />} />
         <Route path="/v5" element={<InterfaceV5 />} />
         <Route path="/v6" element={<InterfaceV6 />} />
+        <Route path="/analytics-9k2m" element={<AnalyticsViewer />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Router>
