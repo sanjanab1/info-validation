@@ -33,6 +33,11 @@ export interface SourceInteraction {
   durationMs: number;
 }
 
+export interface ConfidenceTextHover {
+  confidence: string;
+  durationMs: number;
+}
+
 export interface SessionSummary {
   sessionId: string;
   participantId: number;
@@ -44,6 +49,7 @@ export interface SessionSummary {
   sourceHovers: SourceInteraction[];
   sourceClicks: SourceInteraction[];
   followUpClicks: string[];
+  confidenceTextHovers: ConfidenceTextHover[];
 }
 
 function labelFromUrl(url: string): string {
@@ -61,6 +67,7 @@ export function getSessionSummaries(): SessionSummary[] {
   const events = exportAnalytics();
   const sessions = new Map<string, SessionSummary>();
   const hoverStarts = new Map<string, number>(); // `${sessionId}:${url}` → timestamp
+  const confTextStarts = new Map<string, { time: number; confidence: string }>(); // sessionId → start info
 
   for (const event of events) {
     if (!sessions.has(event.sessionId)) {
@@ -75,6 +82,7 @@ export function getSessionSummaries(): SessionSummary[] {
         sourceHovers: [],
         sourceClicks: [],
         followUpClicks: [],
+        confidenceTextHovers: [],
       });
     }
 
@@ -94,6 +102,16 @@ export function getSessionSummaries(): SessionSummary[] {
         s.sourceHovers.push({ url, label, confidence, durationMs: event.timestamp - started });
       } else if (event.eventType === 'click') {
         s.sourceClicks.push({ url, label, confidence, durationMs: 0 });
+      }
+    } else if (event.element === 'confidence_text') {
+      if (event.eventType === 'hover_enter') {
+        confTextStarts.set(event.sessionId, { time: event.timestamp, confidence: event.confidence ?? '' });
+      } else if (event.eventType === 'hover_exit') {
+        const started = confTextStarts.get(event.sessionId);
+        if (started) {
+          s.confidenceTextHovers.push({ confidence: started.confidence, durationMs: event.timestamp - started.time });
+          confTextStarts.delete(event.sessionId);
+        }
       }
     } else if (event.element === 'follow_up_option' && event.eventType === 'click' && event.optionText) {
       s.followUpClicks.push(event.optionText);
@@ -168,12 +186,14 @@ export function exportAsCsv(): string {
   const summaries = getSessionSummaries();
   const headers = [
     'Session ID', 'PID', 'Interface', 'Content Pack', 'Date', 'Duration (s)',
-    'Sends', 'Source Hovers', 'Avg Hover (ms)', 'Source Clicks', 'Follow-up Clicks',
+    'Sends', 'Source Hovers', 'Avg Source Hover (ms)', 'Source Clicks', 'Follow-up Clicks',
+    'Conf Text Hovers (high)', 'Conf Text Hovers (medium)', 'Conf Text Hovers (low)',
   ];
   const rows = summaries.map(s => {
     const avgHover = s.sourceHovers.length > 0
       ? Math.round(s.sourceHovers.reduce((sum, h) => sum + h.durationMs, 0) / s.sourceHovers.length)
       : 0;
+    const confCount = (level: string) => s.confidenceTextHovers.filter(h => h.confidence === level).length;
     return [
       s.sessionId,
       s.participantId,
@@ -186,6 +206,9 @@ export function exportAsCsv(): string {
       avgHover,
       s.sourceClicks.length,
       s.followUpClicks.join('; '),
+      confCount('high'),
+      confCount('medium'),
+      confCount('low'),
     ];
   });
   return [headers, ...rows]

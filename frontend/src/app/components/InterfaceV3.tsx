@@ -19,6 +19,7 @@ const CONTENT_VERSION: LlmContentVersion = 'plain';
 
 function MessageBubble({ message, index, onTrack }: { message: Message; index: number; onTrack?: TrackFn }) {
   const isUser = message.type === 'user';
+  const confidenceHoverStart = useRef<number>(0);
 
   const renderFormattedContent = (content: string) => {
     const parts = content.split(/(\*\*.*?\*\*|\[high\].*?\[\/high\]|\[medium\].*?\[\/medium\]|\[low\].*?\[\/low\]|\[source:.*?\])/g);
@@ -27,14 +28,16 @@ function MessageBubble({ message, index, onTrack }: { message: Message; index: n
       if (part.startsWith('**') && part.endsWith('**')) {
         return <strong key={i}>{part.slice(2, -2)}</strong>;
       }
-      if (part.startsWith('[high]') && part.endsWith('[/high]')) {
-        return <span key={i}>{part.slice(6, -7)}</span>;
-      }
-      if (part.startsWith('[medium]') && part.endsWith('[/medium]')) {
-        return <span key={i}>{part.slice(8, -9)}</span>;
-      }
-      if (part.startsWith('[low]') && part.endsWith('[/low]')) {
-        return <span key={i}>{part.slice(5, -6)}</span>;
+      const confMatch = part.match(/^\[(high|medium|low)\]([\s\S]*)\[\/\1\]$/);
+      if (confMatch) {
+        const conf = confMatch[1] as 'high' | 'medium' | 'low';
+        return (
+          <span
+            key={i}
+            onMouseEnter={() => { confidenceHoverStart.current = Date.now(); onTrack?.('hover_enter', 'confidence_text', { confidence: conf }); }}
+            onMouseLeave={() => { onTrack?.('hover_exit', 'confidence_text', { confidence: conf, durationMs: Date.now() - confidenceHoverStart.current }); }}
+          >{confMatch[2]}</span>
+        );
       }
       if (part.startsWith('[source:')) {
         const match = part.match(/\[source:(.*?):(low|medium|high)\]/);

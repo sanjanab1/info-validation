@@ -94,27 +94,27 @@ I'd suggest [medium]keeping a food diary to track any correlations[/medium] with
       plain: `
 **1. Omega-3 fatty acids and inflammatory mediators**
 
-Dietary omega-3 fatty acids (e.g., EPA and DHA) can influence inflammatory pathways by altering eicosanoid production and reducing pro-inflammatory signaling. They may also give rise to specialized pro-resolving mediators that help terminate inflammatory responses rather than simply suppress them. The magnitude of these effects varies with dose, baseline diet, and underlying health status. [source:https://pubmed.ncbi.nlm.nih.gov/example1:medium]
+Dietary omega-3 fatty acids (e.g., EPA and DHA) can influence inflammatory pathways by altering eicosanoid production and reducing pro-inflammatory signaling. They may also give rise to specialized pro-resolving mediators that help terminate inflammatory responses rather than simply suppress them. The magnitude of these effects varies with dose, baseline diet, and underlying health status. [source:https://pubmed.ncbi.nlm.nih.gov/example1:high]
 
 **2. Dietary patterns rich in plant foods**
 
- Patterns such as the Mediterranean diet are associated with lower levels of inflammatory biomarkers, likely due to combined effects of fiber, polyphenols, and unsaturated fats. These benefits appear to emerge from overall dietary patterns rather than single nutrients in isolation. However, adherence and lifestyle confounders (e.g., physical activity) complicate causal interpretation. [source:https://pubmed.ncbi.nlm.nih.gov/example1:medium]
+Patterns such as the Mediterranean diet are associated with lower levels of inflammatory biomarkers, likely due to combined effects of fiber, polyphenols, and unsaturated fats. These benefits appear to emerge from overall dietary patterns rather than single nutrients in isolation. However, adherence and lifestyle confounders (e.g., physical activity) complicate causal interpretation. [source:https://pubmed.ncbi.nlm.nih.gov/example2:medium]
 
 **3. Alkaline blood buffering through anti-inflammatory foods**
 
-It is often suggested that “alkaline” foods neutralize blood acidity, thereby directly suppressing systemic inflammation. This claim is frequently extended to imply that routine dietary choices can meaningfully shift systemic pH and reduce disease risk. [source:https://pubmed.ncbi.nlm.nih.gov/example1:medium]`,
+It is often suggested that “alkaline” foods neutralize blood acidity, thereby directly suppressing systemic inflammation. This claim is frequently extended to imply that routine dietary choices can meaningfully shift systemic pH and reduce disease risk. [source:https://pubmed.ncbi.nlm.nih.gov/example3:low]`,
       annotated: `
 **1. Omega-3 fatty acids and inflammatory mediators**
 
-Dietary omega-3 fatty acids (e.g., EPA and DHA) can influence inflammatory pathways by altering eicosanoid production and reducing pro-inflammatory signaling. [high]They may also give rise to specialized pro-resolving mediators that help terminate inflammatory responses rather than simply suppress them.[/high] The magnitude of these effects varies with dose, baseline diet, and underlying health status. [source:https://pubmed.ncbi.nlm.nih.gov/example1:medium]
+Dietary omega-3 fatty acids (e.g., EPA and DHA) can influence inflammatory pathways by altering eicosanoid production and reducing pro-inflammatory signaling. [high]They may also give rise to specialized pro-resolving mediators that help terminate inflammatory responses rather than simply suppress them.[/high] The magnitude of these effects varies with dose, baseline diet, and underlying health status. [source:https://pubmed.ncbi.nlm.nih.gov/example1:high]
 
 **2. Dietary patterns rich in plant foods**
 
-  [medium]Patterns such as the Mediterranean diet are associated with lower levels of inflammatory biomarkers[/medium], likely due to combined effects of fiber, polyphenols, and unsaturated fats. These benefits appear to emerge from overall dietary patterns rather than single nutrients in isolation. However, adherence and lifestyle confounders (e.g., physical activity) complicate causal interpretation. [source:https://pubmed.ncbi.nlm.nih.gov/example1:medium]
+  [medium]Patterns such as the Mediterranean diet are associated with lower levels of inflammatory biomarkers[/medium], likely due to combined effects of fiber, polyphenols, and unsaturated fats. These benefits appear to emerge from overall dietary patterns rather than single nutrients in isolation. However, adherence and lifestyle confounders (e.g., physical activity) complicate causal interpretation. [source:https://pubmed.ncbi.nlm.nih.gov/example2:medium]
 
 **3. Alkaline blood buffering through anti-inflammatory foods**
 
-  [low]It is often suggested that “alkaline” foods neutralize blood acidity[/low], thereby directly suppressing systemic inflammation. This claim is frequently extended to imply that routine dietary choices can meaningfully shift systemic pH and reduce disease risk. [source:https://pubmed.ncbi.nlm.nih.gov/example1:medium]`
+  [low]It is often suggested that “alkaline” foods neutralize blood acidity[/low], thereby directly suppressing systemic inflammation. This claim is frequently extended to imply that routine dietary choices can meaningfully shift systemic pH and reduce disease risk. [source:https://pubmed.ncbi.nlm.nih.gov/example3:low]`
     },
     followUpAssistantResponses: [
       {

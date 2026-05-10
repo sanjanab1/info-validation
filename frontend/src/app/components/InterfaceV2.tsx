@@ -37,6 +37,7 @@ function ConfidenceLegend() {
 
 function MessageBubble({ message, index, onTrack }: { message: Message; index: number; onTrack?: TrackFn }) {
   const isUser = message.type === 'user';
+  const confidenceHoverStart = useRef<number>(0);
 
   const renderFormattedContent = (content: string) => {
     // Split by patterns: bold text, confidence markers, and sources
@@ -46,24 +47,20 @@ function MessageBubble({ message, index, onTrack }: { message: Message; index: n
       if (part.startsWith('**') && part.endsWith('**')) {
         return <strong key={i}>{part.slice(2, -2)}</strong>;
       }
-      if (part.startsWith('[high]') && part.endsWith('[/high]')) {
+      const confMatch = part.match(/^\[(high|medium|low)\]([\s\S]*)\[\/\1\]$/);
+      if (confMatch) {
+        const conf = confMatch[1] as 'high' | 'medium' | 'low';
+        const colorClass = conf === 'high' ? 'underline decoration-2 decoration-[#4A90E2]'
+          : conf === 'medium' ? 'underline decoration-2 decoration-[#F5A623]'
+          : 'underline decoration-2 decoration-[#EA4C89]';
         return (
-          <span key={i} className="underline decoration-2 decoration-[#4A90E2]">
-            {part.slice(6, -7)}
-          </span>
-        );
-      }
-      if (part.startsWith('[medium]') && part.endsWith('[/medium]')) {
-        return (
-          <span key={i} className="underline decoration-2 decoration-[#F5A623]">
-            {part.slice(8, -9)}
-          </span>
-        );
-      }
-      if (part.startsWith('[low]') && part.endsWith('[/low]')) {
-        return (
-          <span key={i} className="underline decoration-2 decoration-[#EA4C89]">
-            {part.slice(5, -6)}
+          <span
+            key={i}
+            className={colorClass}
+            onMouseEnter={() => { confidenceHoverStart.current = Date.now(); onTrack?.('hover_enter', 'confidence_text', { confidence: conf }); }}
+            onMouseLeave={() => { onTrack?.('hover_exit', 'confidence_text', { confidence: conf, durationMs: Date.now() - confidenceHoverStart.current }); }}
+          >
+            {confMatch[2]}
           </span>
         );
       }

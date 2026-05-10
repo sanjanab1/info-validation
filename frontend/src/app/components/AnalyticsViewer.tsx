@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import {
-  getSessionSummaries, clearAnalytics, exportAsCsv, type SessionSummary,
+  getSessionSummaries, clearAnalytics, exportAsCsv, type SessionSummary, type ConfidenceTextHover,
   exportCursorSessions, clearCursor, exportCursorAsCsv,
 } from '../analytics/analyticsClient';
 import type { CursorSession } from '../analytics/types';
@@ -47,18 +47,28 @@ function downloadCsv(csv: string, filename: string) {
 
 // ── Events tab ────────────────────────────────────────────────────────────────
 
+function ConfTextHoverRow({ hover }: { hover: ConfidenceTextHover }) {
+  return (
+    <div className="flex items-center gap-2 text-xs text-gray-700">
+      <ConfidenceBadge level={hover.confidence} />
+      <span className="text-gray-400">{formatMs(hover.durationMs)}</span>
+    </div>
+  );
+}
+
 function ExpandedEventRow({ summary }: { summary: SessionSummary }) {
   const avgHover = summary.sourceHovers.length > 0
     ? Math.round(summary.sourceHovers.reduce((sum, h) => sum + h.durationMs, 0) / summary.sourceHovers.length)
     : null;
 
-  const isEmpty = summary.sourceHovers.length === 0 && summary.sourceClicks.length === 0 && summary.followUpClicks.length === 0;
+  const isEmpty = summary.sourceHovers.length === 0 && summary.sourceClicks.length === 0
+    && summary.followUpClicks.length === 0 && summary.confidenceTextHovers.length === 0;
 
   if (isEmpty) {
     return (
       <tr>
         <td colSpan={10} className="px-4 pb-4 pt-0">
-          <p className="ml-4 text-xs text-gray-400 italic">No source interactions or follow-up clicks recorded.</p>
+          <p className="ml-4 text-xs text-gray-400 italic">No interactions recorded.</p>
         </td>
       </tr>
     );
@@ -68,6 +78,18 @@ function ExpandedEventRow({ summary }: { summary: SessionSummary }) {
     <tr>
       <td colSpan={10} className="px-4 pb-4 pt-0">
         <div className="ml-4 space-y-3">
+          {summary.confidenceTextHovers.length > 0 && (
+            <div>
+              <p className="text-xs font-medium text-gray-500 mb-1.5">
+                Confidence text hovers <span className="font-normal">({summary.confidenceTextHovers.length} total)</span>
+              </p>
+              <div className="space-y-1">
+                {summary.confidenceTextHovers.map((h, i) => (
+                  <ConfTextHoverRow key={i} hover={h} />
+                ))}
+              </div>
+            </div>
+          )}
           {summary.sourceHovers.length > 0 && (
             <div>
               <p className="text-xs font-medium text-gray-500 mb-1.5">
@@ -120,7 +142,7 @@ function EventSessionRow({ summary }: { summary: SessionSummary }) {
   const avgHover = summary.sourceHovers.length > 0
     ? Math.round(summary.sourceHovers.reduce((sum, h) => sum + h.durationMs, 0) / summary.sourceHovers.length)
     : null;
-  const hasDetails = summary.sourceHovers.length > 0 || summary.sourceClicks.length > 0 || summary.followUpClicks.length > 0;
+  const hasDetails = summary.confidenceTextHovers.length > 0 || summary.sourceHovers.length > 0 || summary.sourceClicks.length > 0 || summary.followUpClicks.length > 0;
 
   return (
     <>
@@ -162,7 +184,7 @@ function EventSessionRow({ summary }: { summary: SessionSummary }) {
 function EventsTab() {
   const [summaries, setSummaries] = useState<SessionSummary[]>(() => getSessionSummaries());
   const totalInteractions = summaries.reduce((sum, s) =>
-    sum + s.sends + s.sourceHovers.length + s.sourceClicks.length + s.followUpClicks.length, 0);
+    sum + s.sends + s.sourceHovers.length + s.sourceClicks.length + s.followUpClicks.length + s.confidenceTextHovers.length, 0);
 
   const handleClear = () => {
     if (!window.confirm('Delete all event analytics data?')) return;
@@ -197,10 +219,10 @@ function EventsTab() {
       {summaries.length > 0 && (
         <div className="grid grid-cols-4 gap-4">
           {[
-            { label: 'Sessions',       value: summaries.length },
-            { label: 'Total Sends',    value: summaries.reduce((s, r) => s + r.sends, 0) },
-            { label: 'Source Hovers',  value: summaries.reduce((s, r) => s + r.sourceHovers.length, 0) },
-            { label: 'Source Clicks',  value: summaries.reduce((s, r) => s + r.sourceClicks.length, 0) },
+            { label: 'Sessions',            value: summaries.length },
+            { label: 'Total Sends',         value: summaries.reduce((s, r) => s + r.sends, 0) },
+            { label: 'Conf Text Hovers',    value: summaries.reduce((s, r) => s + r.confidenceTextHovers.length, 0) },
+            { label: 'Source Hovers',       value: summaries.reduce((s, r) => s + r.sourceHovers.length, 0) },
           ].map(({ label, value }) => (
             <div key={label} className="rounded-xl border border-gray-200 bg-white px-5 py-4">
               <p className="text-xs text-gray-500">{label}</p>
