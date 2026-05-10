@@ -1,4 +1,4 @@
-import type { AnalyticsEvent } from './types';
+import type { AnalyticsEvent, CursorPoint, CursorSession } from './types';
 
 const STORAGE_KEY = 'iv_analytics';
 
@@ -102,6 +102,67 @@ export function getSessionSummaries(): SessionSummary[] {
 
   return Array.from(sessions.values()).sort((a, b) => b.startTime - a.startTime);
 }
+
+// ── Cursor movement storage ──────────────────────────────────────────────────
+
+const CURSOR_KEY = 'iv_cursor';
+
+export function appendCursorPoints(
+  sessionId: string,
+  participantId: number,
+  interfaceVersion: string,
+  contentPack: string,
+  points: CursorPoint[]
+): void {
+  if (points.length === 0) return;
+  try {
+    const raw = localStorage.getItem(CURSOR_KEY);
+    const sessions: CursorSession[] = raw ? JSON.parse(raw) : [];
+    const existing = sessions.find(s => s.sessionId === sessionId);
+    if (existing) {
+      existing.points.push(...points);
+    } else {
+      sessions.push({ sessionId, participantId, interfaceVersion, contentPack, points });
+    }
+    localStorage.setItem(CURSOR_KEY, JSON.stringify(sessions));
+  } catch {
+    // quota exceeded — silently skip
+  }
+}
+
+export function exportCursorSessions(): CursorSession[] {
+  try {
+    const raw = localStorage.getItem(CURSOR_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+export function clearCursor(): void {
+  localStorage.removeItem(CURSOR_KEY);
+}
+
+export function exportCursorAsCsv(): string {
+  const sessions = exportCursorSessions();
+  const headers = ['Session ID', 'PID', 'Interface', 'Content Pack', 'Timestamp', 'X', 'Y', 'X%', 'Y%'];
+  const rows: (string | number)[][] = [];
+  for (const session of sessions) {
+    for (const [ts, x, y, xPct, yPct] of session.points) {
+      rows.push([
+        session.sessionId, session.participantId,
+        session.interfaceVersion, session.contentPack,
+        ts, x, y,
+        xPct.toFixed(4), yPct.toFixed(4),
+      ]);
+    }
+  }
+  return [headers, ...rows]
+    .map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
+    .join('\n');
+}
+
+// ── Event analytics CSV export ───────────────────────────────────────────────
 
 export function exportAsCsv(): string {
   const summaries = getSessionSummaries();
